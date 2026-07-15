@@ -2,9 +2,13 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { BookOpen, Bell, Sun, Moon, Award, User, ChevronDown, Check, ShieldAlert } from 'lucide-react';
+import { BookOpen, Bell, Sun, Moon, Award, User, ChevronDown, Check, ShieldAlert, Menu } from 'lucide-react';
 
-export default function Navbar() {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export default function Navbar({ onMenuClick }: NavbarProps) {
   const { 
     currentUser, 
     users, 
@@ -33,17 +37,18 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="navbar glass-panel" style={{
-      margin: '16px 24px',
-      padding: '12px 24px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'relative',
-      zIndex: 100
-    }}>
+    <nav className="navbar navbar-container glass-panel">
       {/* Brand Logo & College Tenancy */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Mobile Sidebar Hamburger Toggle */}
+        <button 
+          onClick={onMenuClick}
+          className="btn btn-secondary mobile-menu-btn"
+          style={{ padding: '8px', borderRadius: '8px' }}
+        >
+          <Menu size={20} />
+        </button>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
           <div style={{
             background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
@@ -56,7 +61,7 @@ export default function Navbar() {
           }}>
             <BookOpen size={20} />
           </div>
-          <span className="glow-accent" style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
+          <span className="glow-accent navbar-brand-text" style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
             AcademicHub
           </span>
         </div>
@@ -79,13 +84,13 @@ export default function Navbar() {
               alt={activeCollege.name} 
               style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} 
             />
-            <span>{activeCollege.name}</span>
+            <span className="navbar-college-name">{activeCollege.name}</span>
           </div>
         )}
       </div>
 
       {/* Right Action Icons & Profile Info */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         
         {/* Leaderboard Points Display */}
         {currentUser && (
@@ -103,7 +108,7 @@ export default function Navbar() {
           }} title={`Badge: ${getBadgeName(currentUser.points)}`}>
             <Award size={16} />
             <span>{currentUser.points} Pts</span>
-            <span style={{ fontSize: '0.75rem', opacity: 0.8, marginLeft: '4px' }}>
+            <span className="navbar-points-badge-text" style={{ fontSize: '0.75rem', opacity: 0.8, marginLeft: '4px' }}>
               ({getBadgeName(currentUser.points).split(' ')[0]})
             </span>
           </div>
@@ -222,7 +227,7 @@ export default function Navbar() {
                 alt={currentUser.full_name} 
                 style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.08)' }} 
               />
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center' }}>
+              <div className="navbar-profile-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center' }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{currentUser.full_name}</span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
                   {currentUser.role}

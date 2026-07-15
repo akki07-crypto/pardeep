@@ -90,14 +90,8 @@ export default function SignupPage() {
       padding: '24px',
       background: 'var(--bg-gradient)'
     }}>
-      <div className="glass-panel" style={{
-        width: '100%',
+      <div className="glass-panel auth-panel" style={{
         maxWidth: '460px',
-        padding: '32px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px',
-        boxShadow: 'var(--shadow-lg)',
         border: '1px solid rgba(99, 102, 241, 0.2)'
       }}>
         {/* Title */}

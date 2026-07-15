@@ -203,3 +203,261 @@ input:focus, select:focus, textarea:focus {
 .navbar-profile:hover {
   background: var(--surface-hover);
 }
+
+/* ==========================================
+   Responsive Utilities & Layout Components
+   ========================================== */
+
+/* Main Layout Wrapper */
+.sidebar-container {
+  width: 260px;
+  margin: 16px 0 16px 24px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  height: calc(100vh - 32px);
+  box-shadow: var(--shadow-md);
+  z-index: 1010;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+}
+
+.navbar-container {
+  margin: 16px 24px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 100;
+}
+
+.main-container {
+  padding: 0 24px 24px 24px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Hamburger menu toggle button style */
+.mobile-menu-btn {
+  display: none !important;
+}
+
+/* Greeting / Stats Banners */
+.responsive-banner {
+  padding: 24px;
+  border: 1px solid var(--surface-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Search and Filters */
+.filters-container {
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.filters-container > * {
+  flex: 1 1 auto;
+}
+
+/* Swap Lounge Grid */
+.swap-panels-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Donation Layout Grid */
+.donation-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+}
+
+.donation-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+/* Book Details Modal */
+.book-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+.book-modal-container {
+  width: 90%;
+  max-width: 850px;
+  height: 85%;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.book-modal-left {
+  width: 35%;
+  border-right: 1px solid var(--surface-border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(0,0,0,0.15);
+  overflow-y: auto;
+}
+
+.book-modal-right {
+  width: 65%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+/* AI Chat Box */
+.ai-chatbot-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.ai-chatbot-box {
+  width: 350px;
+  height: 450px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(168,85,247,0.3);
+  overflow: hidden;
+}
+
+/* Co-Study Rooms Modal */
+.room-chat-modal-content {
+  width: 90%;
+  max-width: 500px;
+  height: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Auth Pages Panel Container */
+.auth-panel {
+  width: 100%;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Media Queries for Tablet and Desktop Transitions */
+@media (max-width: 1023px) {
+  .sidebar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    margin: 0 !important;
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid var(--surface-border);
+    transform: translateX(-100%);
+  }
+  .sidebar-container.open {
+    transform: translateX(0);
+  }
+  .mobile-menu-btn {
+    display: inline-flex !important;
+  }
+  .navbar-container {
+    margin: 12px 16px;
+    padding: 12px 16px;
+  }
+  .main-container {
+    padding: 0 16px 16px 16px;
+  }
+  .donation-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Media Queries for Mobile Screens */
+@media (max-width: 768px) {
+  .responsive-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+  .swap-panels-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .book-modal-container {
+    flex-direction: column;
+    height: 90%;
+    overflow-y: auto;
+  }
+  .book-modal-left {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+    overflow-y: visible;
+    padding: 20px;
+  }
+  .book-modal-right {
+    width: 100%;
+    overflow-y: visible;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-chatbot-box {
+    width: calc(100vw - 32px);
+    height: 75vh;
+  }
+  .auth-panel {
+    padding: 20px;
+    gap: 16px;
+  }
+  .filters-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filters-container > * {
+    width: 100%;
+  }
+}
+

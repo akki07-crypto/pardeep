@@ -214,42 +214,13 @@ export default function BookCard({ book }: BookCardProps) {
 
       {/* Book details & reviews modal (Frosted overlay) */}
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(8px)'
-        }} onClick={() => setShowModal(false)}>
+        <div className="book-modal-overlay" onClick={() => setShowModal(false)}>
           <div 
             onClick={e => e.stopPropagation()} 
-            className="glass-panel" 
-            style={{
-              width: '90%',
-              maxWidth: '850px',
-              height: '85%',
-              display: 'flex',
-              flexDirection: 'row',
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-lg)'
-            }}
+            className="glass-panel book-modal-container"
           >
             {/* Left Pane - Cover & Transactions Actions */}
-            <div style={{
-              width: '35%',
-              borderRight: '1px solid var(--surface-border)',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-              background: 'rgba(0,0,0,0.15)'
-            }}>
+            <div className="book-modal-left">
               <img 
                 src={book.cover_image_url} 
                 alt={book.title} 
@@ -298,14 +269,7 @@ export default function BookCard({ book }: BookCardProps) {
             </div>
 
             {/* Right Pane - Reviews & Discussions Boards */}
-            <div style={{
-              width: '65%',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '24px',
-              overflowY: 'auto'
-            }}>
+            <div className="book-modal-right">
               {/* Tab Selector Sections */}
               <div>
                 {/* 1. Discussion Forum Threads Section */}

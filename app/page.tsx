@@ -27,6 +27,9 @@ export default function LibraryHub() {
   const [selectedCampus, setSelectedCampus] = useState<string>('All');
   const [availableOnly, setAvailableOnly] = useState(false);
 
+  // Mobile Sidebar State
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // Swap Form State
   const [swapSenderBook, setSwapSenderBook] = useState('');
   const [swapReceiverBook, setSwapReceiverBook] = useState('');
@@ -167,26 +170,21 @@ export default function LibraryHub() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)' }}>
       {/* Navigation Sidebar */}
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Panel Content */}
-      <div className="main-content" style={{ display: 'flex', flexDirection: 'column' }}>
-        <Navbar />
+      <div className="main-content">
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Dynamic Screen Renders */}
-        <main style={{ padding: '0 24px 24px 24px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <main className="main-container">
           
           {/* TAB 1: BOOK EXPLORER DASHBOARD */}
           {activeTab === 'explorer' && (
             <>
               {/* Header Greeting Banner */}
-              <div className="glass-panel" style={{
-                padding: '24px',
+              <div className="glass-panel responsive-banner" style={{
                 background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(168,85,247,0.08) 100%)',
-                border: '1px solid var(--surface-border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
               }}>
                 <div>
                   <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Welcome Back, {currentUser.full_name}!</h2>
@@ -227,7 +225,7 @@ export default function LibraryHub() {
               </div>
 
               {/* Search & Dynamic Filters Row */}
-              <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+              <div className="glass-panel filters-container">
                 {/* Search Inputs */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1, minWidth: '240px', background: 'rgba(0,0,0,0.12)', border: '1px solid var(--surface-border)', borderRadius: '8px', padding: '6px 12px' }}>
                   <Search size={16} style={{ color: 'var(--text-muted)' }} />
@@ -304,13 +302,9 @@ export default function LibraryHub() {
           {activeTab === 'bookshelf' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {/* Dues & late fees tracker */}
-              <div className="glass-panel" style={{
-                padding: '24px',
+              <div className="glass-panel responsive-banner" style={{
                 borderLeft: `6px solid ${totalFine > 0 ? 'var(--danger)' : 'var(--success)'}`,
                 background: totalFine > 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(16, 185, 129, 0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
               }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   {totalFine > 0 ? (
@@ -344,14 +338,10 @@ export default function LibraryHub() {
                       if (!book) return null;
                       const isOverdue = tx.status === 'overdue';
                       return (
-                        <div key={tx.id} style={{
+                        <div key={tx.id} className="responsive-banner" style={{
                           padding: '16px',
                           borderRadius: '10px',
-                          border: '1px solid var(--surface-border)',
                           background: 'rgba(255, 255, 255, 0.01)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between'
                         }}>
                           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                             <img src={book.cover_image_url} style={{ width: '48px', height: '64px', objectFit: 'cover', borderRadius: '4px' }} />
@@ -454,7 +444,7 @@ export default function LibraryHub() {
               </div>
 
               {/* Active swap requests */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="swap-panels-grid">
                 
                 {/* Received Offers */}
                 <div className="glass-panel" style={{ padding: '24px' }}>
@@ -594,13 +584,8 @@ export default function LibraryHub() {
           {/* TAB 5: BOOK DONATION DRIVE */}
           {activeTab === 'donation' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div className="glass-panel" style={{
-                padding: '24px',
+              <div className="glass-panel responsive-banner" style={{
                 background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(99,102,241,0.08) 100%)',
-                border: '1px solid var(--surface-border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
               }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Book Donation Drive & Hub 🎁</h2>
@@ -621,7 +606,7 @@ export default function LibraryHub() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '24px' }}>
+              <div className="donation-grid">
                 {/* Donation Form */}
                 <div className="glass-panel" style={{ padding: '24px' }}>
                   <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '16px' }}>List a Book to Donate</h3>
@@ -653,7 +638,7 @@ export default function LibraryHub() {
                     }
                   }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="donation-form-row">
                       <div>
                         <label style={{ display: 'block', fontSize: '0.78rem', marginBottom: '6px', color: 'var(--text-muted)' }}>Book Title:</label>
                         <input type="text" placeholder="e.g. Concrete Mathematics" value={donateTitle} onChange={e => setDonateTitle(e.target.value)} required />
@@ -664,7 +649,7 @@ export default function LibraryHub() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                    <div className="donation-form-row">
                       <div>
                         <label style={{ display: 'block', fontSize: '0.78rem', marginBottom: '6px', color: 'var(--text-muted)' }}>Category:</label>
                         <select value={donateCategory} onChange={e => setDonateCategory(e.target.value as any)} style={{ padding: '10px' }}>
@@ -715,13 +700,8 @@ export default function LibraryHub() {
           {/* TAB 6: CO-STUDY COLLABORATION ROOMS */}
           {activeTab === 'study' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div className="glass-panel" style={{
-                padding: '24px',
+              <div className="glass-panel responsive-banner" style={{
                 background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(168,85,247,0.08) 100%)',
-                border: '1px solid var(--surface-border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
               }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Co-Study Virtual Rooms 👥</h2>
@@ -786,7 +766,7 @@ export default function LibraryHub() {
                   justifyContent: 'center',
                   backdropFilter: 'blur(4px)'
                 }} onClick={() => setActiveRoomId(null)}>
-                  <div className="glass-panel" onClick={e => e.stopPropagation()} style={{ width: '90%', maxWidth: '500px', height: '480px', display: 'flex', flexDirection: 'column' }}>
+                  <div className="glass-panel room-chat-modal-content" onClick={e => e.stopPropagation()}>
                     <div style={{ padding: '16px', background: 'var(--primary-glow)', borderBottom: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <strong style={{ fontSize: '0.9rem' }}>Room Live Chat Panel</strong>
                       <button onClick={() => setActiveRoomId(null)} style={{ background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
@@ -817,13 +797,8 @@ export default function LibraryHub() {
           {/* TAB 7: CAMPUS EVENTS CALENDAR */}
           {activeTab === 'events' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div className="glass-panel" style={{
-                padding: '24px',
+              <div className="glass-panel responsive-banner" style={{
                 background: 'linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(99,102,241,0.08) 100%)',
-                border: '1px solid var(--surface-border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
               }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Campus Events & Seminars Calendar 📅</h2>
@@ -837,7 +812,7 @@ export default function LibraryHub() {
               </div>
 
               {/* Events Listings */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                 {[
                   { id: 'ev1', title: 'Supabase Hacks: Building multi-tenant databases', date: 'July 20, 2026 (04:00 PM)', college: 'BITS Pilani', description: 'Deep dive session on implementing row-level security and connection pools.' },
                   { id: 'ev2', title: 'Guest Lecture: Recurrence Induction in Discrete Maths', date: 'July 25, 2026 (11:00 AM)', college: 'IIT Delhi', description: 'Special seminar by Dr. Amit Sen discussing induction strategies on recurrence relations.' },
@@ -876,17 +851,9 @@ export default function LibraryHub() {
         </main>
 
         {/* Dynamic Chatbot floating console */}
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000 }}>
+        <div className="ai-chatbot-container">
           {isChatOpen ? (
-            <div className="glass-panel" style={{
-              width: '350px',
-              height: '450px',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: 'var(--shadow-lg)',
-              border: '1px solid rgba(168,85,247,0.3)',
-              overflow: 'hidden'
-            }}>
+            <div className="glass-panel ai-chatbot-box">
               {/* Header */}
               <div style={{
                 background: 'linear-gradient(90deg, var(--primary), var(--secondary))',
