@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query, pool } from '../../../lib/db';
+import { getDbSafe, mapId } from '../../../lib/mongodb';
 import { mockDb } from '../../../lib/supabase';
 
 export async function GET(request: Request) {
@@ -8,11 +8,19 @@ export async function GET(request: Request) {
     const action = searchParams.get('action');
 
     if (action === 'colleges') {
-      if (!pool) {
+      const db = await getDbSafe();
+      if (!db) {
         return NextResponse.json(mockDb.getColleges());
       }
-      const result = await query('SELECT * FROM colleges ORDER BY name ASC');
-      return NextResponse.json(result.rows);
+      const result = await db.collection('colleges').find().sort({ name: 1 }).toArray();
+      return NextResponse.json(result.map(mapId));
+    } else if (action === 'users') {
+      const db = await getDbSafe();
+      if (!db) {
+        return NextResponse.json(mockDb.getUsers());
+      }
+      const result = await db.collection('users').find().toArray();
+      return NextResponse.json(result.map(mapId));
     }
     
     return NextResponse.json({ error: 'Invalid GET action' }, { status: 400 });
@@ -26,8 +34,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, email, password, fullName, collegeId } = body;
 
+    const db = await getDbSafe();
+
     if (action === 'login') {
-      if (!pool) {
+      if (!db) {
         // Fallback simulated credential matching
         const users = mockDb.getUsers();
         const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
@@ -39,21 +49,21 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid email or password credentials' }, { status: 401 });
       }
 
-      const userRes = await query(
-        'SELECT * FROM users WHERE email = $1 AND password_hash = $2',
-        [email, password]
-      );
+      const user = await db.collection('users').findOne({
+        email: email.toLowerCase(),
+        password_hash: password
+      });
 
-      if (userRes.rows.length === 0) {
+      if (!user) {
         return NextResponse.json({ error: 'Invalid email or password credentials' }, { status: 401 });
       }
 
-      const user = userRes.rows[0];
-      delete user.password_hash;
-      return NextResponse.json(user);
+      const mappedUser = mapId(user);
+      delete (mappedUser as any).password_hash;
+      return NextResponse.json(mappedUser);
 
     } else if (action === 'signup') {
-      if (!pool) {
+      if (!db) {
         const colleges = mockDb.getColleges();
         const college = colleges.find(c => c.id === collegeId);
         if (!college) {
@@ -89,12 +99,11 @@ export async function POST(request: Request) {
       }
 
       // 1. Fetch target college details to run domain verification gate
-      const collegeRes = await query('SELECT * FROM colleges WHERE id = $1', [collegeId]);
-      if (collegeRes.rows.length === 0) {
+      const college = await db.collection('colleges').findOne({ _id: collegeId });
+      if (!college) {
         return NextResponse.json({ error: 'Selected college not registered' }, { status: 404 });
       }
       
-      const college = collegeRes.rows[0];
       const emailDomain = email.split('@')[1];
 
       // Verification Gate check
@@ -106,25 +115,70 @@ export async function POST(request: Request) {
       }
 
       // 2. Check if user already exists
-      const checkRes = await query('SELECT id FROM users WHERE email = $1', [email]);
-      if (checkRes.rows.length > 0) {
+      const checkUser = await db.collection('users').findOne({ email: email.toLowerCase() });
+      if (checkUser) {
         return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
       }
 
       // 3. Create user profile with welcome award (+10 points)
       const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`;
-      const signupSql = `
-        INSERT INTO users (email, password_hash, full_name, role, college_id, avatar_url, points, is_verified)
-        VALUES ($1, $2, $3, 'student', $4, $5, 10, true)
-        RETURNING *
-      `;
-      const signupParams = [email, password, fullName, collegeId, avatarUrl];
-      const signupRes = await query(signupSql, signupParams);
+      const newUserDoc = {
+        _id: `u_${Date.now()}`,
+        email: email.toLowerCase(),
+        password_hash: password,
+        full_name: fullName,
+        role: 'student',
+        college_id: collegeId,
+        avatar_url: avatarUrl,
+        points: 10,
+        is_verified: true,
+        created_at: new Date()
+      };
+      await db.collection('users').insertOne(newUserDoc as any);
       
-      const newUser = signupRes.rows[0];
-      delete newUser.password_hash;
+      const mappedUser = mapId(newUserDoc);
+      delete (mappedUser as any).password_hash;
 
-      return NextResponse.json(newUser, { status: 201 });
+      return NextResponse.json(mappedUser, { status: 201 });
+    } else if (action === 'updateUser') {
+      const { targetUserId, points, isVerified, requesterId } = body;
+
+      if (!db) {
+        const users = mockDb.getUsers();
+        const requester = users.find(u => u.id === requesterId);
+        if (!requester || requester.role !== 'librarian') {
+          return NextResponse.json({ error: 'Unauthorized: Only librarians can modify users' }, { status: 403 });
+        }
+
+        const updatedUsers = users.map(u => {
+          if (u.id === targetUserId) {
+            return {
+              ...u,
+              points: points !== undefined ? Number(points) : u.points,
+              is_verified: isVerified !== undefined ? Boolean(isVerified) : u.is_verified
+            };
+          }
+          return u;
+        });
+        mockDb.saveUsers(updatedUsers);
+        return NextResponse.json({ success: true });
+      }
+
+      const requester = await db.collection('users').findOne({ _id: requesterId });
+      if (!requester || requester.role !== 'librarian') {
+        return NextResponse.json({ error: 'Unauthorized: Only librarians can modify users' }, { status: 403 });
+      }
+
+      const updateDoc: any = {};
+      if (points !== undefined) updateDoc.points = Number(points);
+      if (isVerified !== undefined) updateDoc.is_verified = Boolean(isVerified);
+
+      await db.collection('users').updateOne(
+        { _id: targetUserId },
+        { $set: updateDoc }
+      );
+
+      return NextResponse.json({ success: true });
     }
 
     return NextResponse.json({ error: 'Invalid action parameters' }, { status: 400 });

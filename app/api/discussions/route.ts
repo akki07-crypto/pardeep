@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { query } from '../../../lib/db';
+import { getDbSafe, mapId } from '../../../lib/mongodb';
+import { mockDb } from '../../../lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -10,15 +11,52 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Book ID is required' }, { status: 400 });
     }
 
-    const sql = `
-      SELECT d.*, u.full_name as user_name, u.avatar_url as user_avatar 
-      FROM discussions d 
-      JOIN users u ON d.user_id = u.id 
-      WHERE d.book_id = $1 
-      ORDER BY d.created_at ASC
-    `;
-    const result = await query(sql, [bookId]);
-    return NextResponse.json(result.rows);
+    const db = await getDbSafe();
+    if (!db) {
+      const discussions = mockDb.getDiscussions();
+      const users = mockDb.getUsers();
+      
+      const filtered = discussions
+        .filter(d => d.book_id === bookId)
+        .map(d => {
+          const user = users.find(u => u.id === d.user_id);
+          return {
+            ...d,
+            user_name: user ? user.full_name : 'Unknown User',
+            user_avatar: user ? user.avatar_url : ''
+          };
+        });
+      filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      return NextResponse.json(filtered);
+    }
+
+    const result = await db.collection('discussions').aggregate([
+      { $match: { book_id: bookId } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          book_id: 1,
+          user_id: 1,
+          content: 1,
+          parent_id: 1,
+          created_at: 1,
+          user_name: { $ifNull: ['$user.full_name', 'Unknown User'] },
+          user_avatar: { $ifNull: ['$user.avatar_url', ''] }
+        }
+      },
+      { $sort: { created_at: 1 } }
+    ]).toArray();
+
+    return NextResponse.json(result.map(mapId));
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -29,22 +67,55 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { bookId, userId, content, parentId } = body;
 
-    const sql = `
-      INSERT INTO discussions (book_id, user_id, content, parent_id)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-    `;
-    const result = await query(sql, [bookId, userId, content, parentId || null]);
-    const comment = result.rows[0];
-
-    // Award points
-    if (parentId) {
-      await query('UPDATE users SET points = points + 15 WHERE id = $1', [userId]); // Answerer
-    } else {
-      await query('UPDATE users SET points = points + 5 WHERE id = $1', [userId]); // Questioner
+    const db = await getDbSafe();
+    if (!db) {
+      const discussions = mockDb.getDiscussions();
+      const users = mockDb.getUsers();
+      
+      const user = users.find(u => u.id === userId);
+      const newDisc = {
+        id: `d_${Date.now()}`,
+        book_id: bookId,
+        user_id: userId,
+        user_name: user ? user.full_name : 'Unknown User',
+        user_avatar: user ? user.avatar_url : '',
+        content,
+        parent_id: parentId || null,
+        created_at: new Date().toISOString()
+      };
+      
+      mockDb.saveDiscussions([...discussions, newDisc]);
+      
+      const pointsToAward = parentId ? 15 : 5;
+      const updatedUsers = users.map(u => {
+        if (u.id === userId) {
+          return { ...u, points: u.points + pointsToAward };
+        }
+        return u;
+      });
+      mockDb.saveUsers(updatedUsers);
+      
+      return NextResponse.json(newDisc, { status: 201 });
     }
 
-    return NextResponse.json(comment, { status: 201 });
+    const newDiscussion = {
+      _id: `d_${Date.now()}`,
+      book_id: bookId,
+      user_id: userId,
+      content,
+      parent_id: parentId || null,
+      created_at: new Date()
+    };
+    
+    await db.collection('discussions').insertOne(newDiscussion as any);
+    
+    const pointsToAward = parentId ? 15 : 5;
+    await db.collection('users').updateOne(
+      { _id: userId },
+      { $inc: { points: pointsToAward } }
+    );
+    
+    return NextResponse.json(mapId(newDiscussion), { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

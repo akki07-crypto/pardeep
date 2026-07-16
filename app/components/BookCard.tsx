@@ -33,6 +33,12 @@ export default function BookCard({ book }: BookCardProps) {
   const isAvailable = book.available_copies > 0;
   const isBorrowedByUser = transactions.some(t => t.book_id === book.id && t.user_id === currentUser?.id && t.returned_at === null);
   
+  const isAccountFrozen = transactions.some(t => 
+    t.user_id === currentUser?.id && 
+    !t.returned_at && 
+    new Date(t.due_date).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
+  );
+
   const userWaitlist = waitlists.find(w => w.book_id === book.id && w.user_id === currentUser?.id && w.status === 'waiting');
   const isWaitlisted = !!userWaitlist;
 
@@ -47,12 +53,20 @@ export default function BookCard({ book }: BookCardProps) {
   const handleBorrow = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUser) return;
+    if (isAccountFrozen) {
+      alert("Your account is frozen due to an overdue book return (> 7 days). Action blocked.");
+      return;
+    }
     borrowBook(book.id);
   };
 
   const handleWaitlist = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUser) return;
+    if (isAccountFrozen) {
+      alert("Your account is frozen due to an overdue book return (> 7 days). Action blocked.");
+      return;
+    }
     joinWaitlist(book.id);
   };
 
@@ -188,9 +202,17 @@ export default function BookCard({ book }: BookCardProps) {
             <button 
               onClick={handleBorrow} 
               className="btn btn-primary" 
-              style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+              style={{ 
+                padding: '6px 12px', 
+                fontSize: '0.75rem',
+                background: isAccountFrozen ? 'rgba(239, 68, 68, 0.2)' : undefined,
+                color: isAccountFrozen ? 'var(--danger)' : undefined,
+                border: isAccountFrozen ? '1px solid var(--danger)' : undefined,
+                cursor: isAccountFrozen ? 'not-allowed' : 'pointer'
+              }}
+              title={isAccountFrozen ? "Account Frozen due to Overdue Book" : "Borrow"}
             >
-              Borrow
+              {isAccountFrozen ? "Frozen" : "Borrow"}
             </button>
           ) : isWaitlisted ? (
             <button 
@@ -244,8 +266,19 @@ export default function BookCard({ book }: BookCardProps) {
                     <span>Currently borrowed by you</span>
                   </div>
                 ) : isAvailable ? (
-                  <button onClick={handleBorrow} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                    Borrow This Copy
+                  <button 
+                    onClick={handleBorrow} 
+                    className="btn btn-primary" 
+                    style={{ 
+                      width: '100%', 
+                      justifyContent: 'center',
+                      background: isAccountFrozen ? 'rgba(239, 68, 68, 0.2)' : undefined,
+                      color: isAccountFrozen ? 'var(--danger)' : undefined,
+                      border: isAccountFrozen ? '1px solid var(--danger)' : undefined,
+                      cursor: isAccountFrozen ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isAccountFrozen ? "Account Frozen (Overdue Book)" : "Borrow This Copy"}
                   </button>
                 ) : isWaitlisted ? (
                   <div style={{ padding: '12px', background: 'rgba(245,158,11,0.05)', border: '1px solid var(--warning)', borderRadius: '8px', textAlign: 'center' }}>

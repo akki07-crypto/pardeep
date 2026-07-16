@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { query } from '../../../lib/db';
+import { getDbSafe, mapId } from '../../../lib/mongodb';
+import { mockDb } from '../../../lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -8,26 +9,38 @@ export async function GET(request: Request) {
     const collegeId = searchParams.get('collegeId');
     const search = searchParams.get('search');
 
-    let sql = 'SELECT * FROM books WHERE 1=1';
-    const params: any[] = [];
+    const db = await getDbSafe();
+    if (!db) {
+      let books = mockDb.getBooks();
+      if (category && category !== 'All') {
+        books = books.filter(b => b.category === category);
+      }
+      if (collegeId && collegeId !== 'All') {
+        books = books.filter(b => b.college_id === collegeId);
+      }
+      if (search) {
+        const queryStr = search.toLowerCase();
+        books = books.filter(b => b.title.toLowerCase().includes(queryStr) || b.author.toLowerCase().includes(queryStr));
+      }
+      return NextResponse.json(books);
+    }
 
+    const filter: any = {};
     if (category && category !== 'All') {
-      params.push(category);
-      sql += ` AND category = $${params.length}`;
+      filter.category = category;
     }
     if (collegeId && collegeId !== 'All') {
-      params.push(collegeId);
-      sql += ` AND college_id = $${params.length}`;
+      filter.college_id = collegeId;
     }
     if (search) {
-      params.push(`%${search}%`);
-      sql += ` AND (title ILIKE $${params.length} OR author ILIKE $${params.length})`;
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { author: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    sql += ' ORDER BY created_at DESC';
-
-    const result = await query(sql, params);
-    return NextResponse.json(result.rows);
+    const result = await db.collection('books').find(filter).sort({ created_at: -1 }).toArray();
+    return NextResponse.json(result.map(mapId));
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -38,15 +51,41 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { title, author, category, isbn, cover_image_url, college_id, total_copies } = body;
 
-    const sql = `
-      INSERT INTO books (title, author, category, isbn, cover_image_url, college_id, total_copies, available_copies, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $7, 'Available')
-      RETURNING *
-    `;
-    const params = [title, author, category, isbn, cover_image_url, college_id, total_copies];
+    const db = await getDbSafe();
+    if (!db) {
+      const books = mockDb.getBooks();
+      const newBook = {
+        id: `b_${Date.now()}`,
+        title,
+        author,
+        category: category as any,
+        isbn,
+        cover_image_url,
+        college_id,
+        total_copies: Number(total_copies),
+        available_copies: Number(total_copies),
+        status: 'Available' as const
+      };
+      mockDb.saveBooks([...books, newBook]);
+      return NextResponse.json(newBook, { status: 201 });
+    }
 
-    const result = await query(sql, params);
-    return NextResponse.json(result.rows[0], { status: 201 });
+    const newBookDoc = {
+      _id: `b_${Date.now()}`,
+      title,
+      author,
+      category,
+      isbn,
+      cover_image_url,
+      college_id,
+      total_copies: Number(total_copies),
+      available_copies: Number(total_copies),
+      status: 'Available',
+      created_at: new Date()
+    };
+
+    await db.collection('books').insertOne(newBookDoc as any);
+    return NextResponse.json(mapId(newBookDoc), { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

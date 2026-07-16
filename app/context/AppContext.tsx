@@ -70,6 +70,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       setBooks(loadedBooks);
 
+      // Fetch Users list
+      const usersRes = await fetch('/api/auth?action=users');
+      let loadedUsers = mockDb.getUsers();
+      if (usersRes.ok) {
+        const usrs = await usersRes.json();
+        if (usrs.length > 0) loadedUsers = usrs;
+      }
+      setUsers(loadedUsers);
+
       if (userId) {
         // 3. Fetch Transactions for active user
         const txRes = await fetch(`/api/transactions?userId=${userId}`);

@@ -106,14 +106,20 @@ export interface Notification {
 const MOCK_COLLEGES: College[] = [
   { id: 'c1', name: 'IIT Delhi', domain: 'iitd.ac.in', subdomain_prefix: 'iitd', logo_url: 'https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=100&auto=format&fit=crop&q=60' },
   { id: 'c2', name: 'IIT Bombay', domain: 'iitb.ac.in', subdomain_prefix: 'iitb', logo_url: 'https://images.unsplash.com/photo-1562774053-401386dfdf8f?w=100&auto=format&fit=crop&q=60' },
-  { id: 'c3', name: 'BITS Pilani', domain: 'bits-pilani.ac.in', subdomain_prefix: 'bits', logo_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=100&auto=format&fit=crop&q=60' }
+  { id: 'c3', name: 'BITS Pilani', domain: 'bits-pilani.ac.in', subdomain_prefix: 'bits', logo_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=100&auto=format&fit=crop&q=60' },
+  { id: 'c4', name: 'Government College, Hoshiarpur', domain: 'gchoshiarpur.ac.in', subdomain_prefix: 'gchp', logo_url: 'https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=100&auto=format&fit=crop&q=60' },
+  { id: 'c5', name: 'DAV College, Hoshiarpur', domain: 'davhoshiarpur.org', subdomain_prefix: 'davh', logo_url: 'https://images.unsplash.com/photo-1562774053-401386dfdf8f?w=100&auto=format&fit=crop&q=60' },
+  { id: 'c6', name: 'S.D. College, Hoshiarpur', domain: 'sdcollegehsp.org', subdomain_prefix: 'sdch', logo_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=100&auto=format&fit=crop&q=60' }
 ];
 
 const MOCK_USERS: User[] = [
   { id: 'u1', email: 'rahul.sharma@iitd.ac.in', full_name: 'Rahul Sharma', role: 'student', college_id: 'c1', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul', points: 155, is_verified: true },
   { id: 'u2', email: 'priya.nair@iitb.ac.in', full_name: 'Priya Nair', role: 'student', college_id: 'c2', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', points: 340, is_verified: true },
   { id: 'u3', email: 'aarav.mehta@bits-pilani.ac.in', full_name: 'Aarav Mehta', role: 'student', college_id: 'c3', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aarav', points: 80, is_verified: true },
-  { id: 'u4', email: 'amit.sen@iitd.ac.in', full_name: 'Dr. Amit Sen', role: 'librarian', college_id: 'c1', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit', points: 10, is_verified: true }
+  { id: 'u4', email: 'amit.sen@iitd.ac.in', full_name: 'Dr. Amit Sen', role: 'librarian', college_id: 'c1', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit', points: 10, is_verified: true },
+  { id: 'u5', email: 'gagan.singh@gchoshiarpur.ac.in', full_name: 'Gagan Singh', role: 'student', college_id: 'c4', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Gagan', points: 120, is_verified: true },
+  { id: 'u6', email: 'mehak.sharma@davhoshiarpur.org', full_name: 'Mehak Sharma', role: 'student', college_id: 'c5', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mehak', points: 210, is_verified: true },
+  { id: 'u7', email: 'rohan.gupta@sdcollegehsp.org', full_name: 'Rohan Gupta', role: 'student', college_id: 'c6', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan', points: 95, is_verified: true }
 ];
 
 const MOCK_BOOKS: Book[] = [
@@ -124,7 +130,10 @@ const MOCK_BOOKS: Book[] = [
   { id: 'b5', title: 'The Amazing Spider-Man: Volume 1', author: 'Stan Lee', category: 'Comics', isbn: '978-0785185031', cover_image_url: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=400&auto=format&fit=crop&q=80', college_id: 'c3', total_copies: 2, available_copies: 2, status: 'Available' },
   { id: 'b6', title: 'To Kill a Mockingbird', author: 'Harper Lee', category: 'Novels', isbn: '978-0446310789', cover_image_url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&auto=format&fit=crop&q=80', college_id: 'c1', total_copies: 1, available_copies: 0, status: 'Borrowed' },
   { id: 'b7', title: 'To Kill a Mockingbird', author: 'Harper Lee', category: 'Novels', isbn: '978-0446310789', cover_image_url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&auto=format&fit=crop&q=80', college_id: 'c2', total_copies: 2, available_copies: 2, status: 'Available' },
-  { id: 'b8', title: 'Discrete Mathematics and its Applications', author: 'Kenneth H. Rosen', category: 'Academic', isbn: '978-0073383095', cover_image_url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&auto=format&fit=crop&q=80', college_id: 'c1', total_copies: 1, available_copies: 0, status: 'Borrowed' }
+  { id: 'b8', title: 'Discrete Mathematics and its Applications', author: 'Kenneth H. Rosen', category: 'Academic', isbn: '978-0073383095', cover_image_url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&auto=format&fit=crop&q=80', college_id: 'c1', total_copies: 1, available_copies: 0, status: 'Borrowed' },
+  { id: 'b9', title: 'Discrete Mathematics and its Applications', author: 'Kenneth H. Rosen', category: 'Academic', isbn: '978-0073383095', cover_image_url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&auto=format&fit=crop&q=80', college_id: 'c4', total_copies: 2, available_copies: 2, status: 'Available' },
+  { id: 'b10', title: 'Introduction to Algorithms', author: 'Thomas H. Cormen', category: 'Academic', isbn: '978-0262033848', cover_image_url: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&auto=format&fit=crop&q=80', college_id: 'c5', total_copies: 2, available_copies: 2, status: 'Available' },
+  { id: 'b11', title: 'Cracking the Coding Interview', author: 'Gayle Laakmann McDowell', category: 'Competitive', isbn: '978-0984782857', cover_image_url: 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=400&auto=format&fit=crop&q=80', college_id: 'c6', total_copies: 2, available_copies: 2, status: 'Available' }
 ];
 
 const MOCK_TRANSACTIONS: Transaction[] = [
