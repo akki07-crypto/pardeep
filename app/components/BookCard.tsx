@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
 import { Book, Transaction, Waitlist } from '../../lib/supabase';
 import { Bookmark, MessageCircle, Star, Users, Clipboard, Plus, CornerDownRight, CheckCircle, Clock } from 'lucide-react';
@@ -28,6 +29,11 @@ export default function BookCard({ book }: BookCardProps) {
   const [replyContent, setReplyContent] = useState('');
   const [reviewComment, setReviewComment] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Checks
   const isAvailable = book.available_copies > 0;
@@ -235,7 +241,7 @@ export default function BookCard({ book }: BookCardProps) {
       </div>
 
       {/* Book details & reviews modal (Frosted overlay) */}
-      {showModal && (
+      {showModal && mounted && createPortal(
         <div className="book-modal-overlay" onClick={() => setShowModal(false)}>
           <div 
             onClick={e => e.stopPropagation()} 
@@ -438,7 +444,8 @@ export default function BookCard({ book }: BookCardProps) {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Animation local helpers */}
