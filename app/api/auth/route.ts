@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { getDbSafe, mapId } from '../../../lib/mongodb';
 import { mockDb } from '../../../lib/supabase';
 
+function normalizeDomain(domain: string): string {
+  if (!domain) return '';
+  return domain.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,6 +18,21 @@ export async function GET(request: Request) {
         return NextResponse.json(mockDb.getColleges());
       }
       const result = await db.collection('colleges').find().sort({ name: 1 }).toArray();
+      
+      // Auto-clean any malformed domains in the DB
+      let hasUpdated = false;
+      for (const col of result) {
+        if (col.domain && (col.domain.includes('://') || col.domain.includes('/'))) {
+          const cleaned = normalizeDomain(col.domain);
+          await db.collection('colleges').updateOne({ _id: col._id }, { $set: { domain: cleaned } });
+          col.domain = cleaned;
+          hasUpdated = true;
+        }
+      }
+      if (hasUpdated) {
+        console.log('[MONGODB] Automatically cleaned malformed college domains in database.');
+      }
+
       return NextResponse.json(result.map(mapId));
     } else if (action === 'users') {
       const db = await getDbSafe();
@@ -70,14 +90,6 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Selected college not registered' }, { status: 404 });
         }
 
-        const emailDomain = email.split('@')[1];
-        if (emailDomain.toLowerCase() !== college.domain.toLowerCase()) {
-          return NextResponse.json(
-            { error: `Verification Gate: Sign up requires a valid institutional email domain matching *@${college.domain}` },
-            { status: 400 }
-          );
-        }
-
         const users = mockDb.getUsers();
         if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
           return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
@@ -102,16 +114,6 @@ export async function POST(request: Request) {
       const college = await db.collection('colleges').findOne({ _id: collegeId });
       if (!college) {
         return NextResponse.json({ error: 'Selected college not registered' }, { status: 404 });
-      }
-      
-      const emailDomain = email.split('@')[1];
-
-      // Verification Gate check
-      if (emailDomain.toLowerCase() !== college.domain.toLowerCase()) {
-        return NextResponse.json(
-          { error: `Verification Gate: Sign up requires a valid institutional email domain matching *@${college.domain}` },
-          { status: 400 }
-        );
       }
 
       // 2. Check if user already exists

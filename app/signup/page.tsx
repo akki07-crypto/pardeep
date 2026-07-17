@@ -7,6 +7,11 @@ import { BookOpen, ShieldAlert, CheckCircle, Info } from 'lucide-react';
 import Link from 'next/link';
 import { College } from '../../lib/supabase';
 
+const normalizeDomain = (domain: string): string => {
+  if (!domain) return '';
+  return domain.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+};
+
 export default function SignupPage() {
   const { setCurrentUserById, colleges: fallbackColleges } = useApp();
   const router = useRouter();
@@ -185,22 +190,15 @@ export default function SignupPage() {
 
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-muted)' }}>
-              College Institutional Email
+              Email Address
             </label>
             <input 
               type="email" 
-              placeholder="e.g., name@college.domain" 
+              placeholder="e.g., name@domain.com" 
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
             />
-            {/* Dynamic Gate Domain Tip */}
-            {activeCollege && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.72rem', color: 'var(--primary)' }}>
-                <Info size={12} />
-                <span>Verification Gate active. Email must end in: <strong>@{activeCollege.domain}</strong></span>
-              </div>
-            )}
           </div>
 
           <div>

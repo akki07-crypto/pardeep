@@ -272,7 +272,7 @@ export default function LibraryHub() {
                   fontWeight: 600
                 }}>
                   <Sparkles size={16} style={{ color: 'var(--secondary)' }} />
-                  <span>College Domain Gate Active</span>
+                  <span>Multi-College Hub Active</span>
                 </div>
               </div>
 
